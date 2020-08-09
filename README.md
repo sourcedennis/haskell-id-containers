@@ -4,6 +4,7 @@ A collection of data containers where every element has a persistent identifier.
 
 ## Example
 The order of arguments is specifically suitable for use with Haskell's `State` monad. For example, consider the fragment below which builds the following (cyclic) graph:
+
 ![Simple cyclic graph](resources/abc_graph.png)
 
 ```haskell
