@@ -115,7 +115,7 @@ insert v s =
       in (i, IdHashSet iData' iInvMap')
 
 -- | /O(m log n)/. Insert the elements into the set. The identifiers of the
--- entries are also returned. 'm' is the number of elements added, where 'n'
+-- entries are also returned. /m/ is the number of elements added, where /n/
 -- is the size of the list.
 insertAll :: (Eq a, Hashable a) => [a] -> IdHashSet a -> ([Identifier], IdHashSet a)
 insertAll vs c = fromList' c vs

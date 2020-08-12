@@ -108,7 +108,7 @@ append v c =
 
 -- | /O(m log n)/. Adds the entries to the end of the list in order. The
 -- identifiers of the entries are also returned.
--- 'm' is the number of elements added, where 'n' is the size of the list.
+-- /m/ is the number of elements added, where /n/ is the size of the list.
 appendAll :: [a] -> IdList a -> ([Identifier], IdList a)
 appendAll vs c = fromList' c vs
   where
