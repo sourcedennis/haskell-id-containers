@@ -18,3 +18,6 @@ graph =
     bId <- state $ IdList.append ("B", cId)
     modify $ IdList.replace aId ("A", bId)
 ```
+
+## License
+BSD-3 - See the `LICENSE` file
