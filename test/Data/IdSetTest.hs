@@ -9,6 +9,8 @@ import           Test.Tasty.HUnit ( assertEqual, assertBool, testCase )
 import           Test.Tasty.QuickCheck ( testProperty )
 import qualified Data.IntSet as IntSet
 import           Data.IntSet ( IntSet )
+import qualified Data.IntMap.Strict as IntMap
+import           Data.IntMap.Strict ( IntMap )
 import qualified Data.Map.Strict as Map
 import           Data.Map.Strict ( Map )
 import qualified Data.Set as Set
@@ -65,6 +67,10 @@ unitTests =
       assertEqual [] Nothing (IdSet.lookup aIdx (IdSet.empty :: IdSet String))
   , testCase "no lookup 1" $
       assertEqual [] Nothing (IdSet.lookup bIdx xs1)
+  , testCase "map values" $
+      assertEqual [] [8,3,2] (IdSet.elems $ snd $ IdSet.map (`div` 2) $ snd $ IdSet.fromList [16,6,4,17,7])
+  , testCase "map keys" $ -- map (`div` 2) [16,6,4,17,7] = [8,3,2]
+      assertEqual [] (IntMap.fromList [(0,0),(1,1),(2,2),(3,0),(4,1)]) (fst $ IdSet.map (`div` 2) $ snd $ IdSet.fromList [16,6,4,17,7])
   , testCase "entries" $
       assertEqual [] [(aIdx,"A"), (bIdx,"B")] (IdSet.entries xs3)
   , testCase "keys" $

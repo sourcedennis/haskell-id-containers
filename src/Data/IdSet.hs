@@ -13,12 +13,6 @@
 -- determine element equivalence. If the values are not totally ordered, see
 -- 'Data.IdHashSet' instead.
 --
--- Note that modification functions are (currently) intentionally left out, as 
--- replacing existing elements may cause identifiers to collapse together.
--- For example, consider the identifiers is the following scenario:
---
--- > map (const 2) (snd $ fromList [1,2,3]) = fromList [2]
---
 -- /Warning/: The size of a 'IdSet' must not exceed @maxBound::Int@. Violation
 -- is /not/ checked and causes undefined behavior.
 --------------------------------------------------------------------------------
@@ -37,6 +31,8 @@ module Data.IdSet
     -- * Update
   , insert
   , insertAll
+    -- * Traversal
+  , map
     -- * Conversion
   , keys
   , elems
@@ -126,6 +122,15 @@ insertAll vs c = fromList' c vs
     let (xI, acc')   = insert x acc
         (xsI, acc'') = fromList' acc' xs
     in (xI:xsI, acc'')
+
+
+-- # Traversal
+
+map :: Ord b => ( a -> b ) -> IdSet a -> (IntMap Identifier, IdSet b)
+map f s =
+  let (newIds, s') = fromList $ fmap f $ IdList.elems (iData s)
+      mapping = IntMap.fromList $ zip [0..] newIds
+  in (mapping, s')
 
 
 -- # Conversion #
