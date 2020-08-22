@@ -71,6 +71,10 @@ unitTests =
       assertEqual [] [8,3,2] (IdSet.elems $ snd $ IdSet.map (`div` 2) $ snd $ IdSet.fromList [16,6,4,17,7])
   , testCase "map keys" $ -- map (`div` 2) [16,6,4,17,7] = [8,3,2]
       assertEqual [] (IntMap.fromList [(0,0),(1,1),(2,2),(3,0),(4,1)]) (fst $ IdSet.map (`div` 2) $ snd $ IdSet.fromList [16,6,4,17,7])
+  , testCase "filter values" $
+      assertEqual [] [2,14] (IdSet.elems $ snd $ IdSet.filter even $ snd $ IdSet.fromList [15,7,2,9,14,1])
+  , testCase "filter keys" $
+      assertEqual [] (IntMap.fromList [(2,0),(4,1)]) (fst $ IdSet.filter even $ snd $ IdSet.fromList [15,7,2,9,14,1])
   , testCase "entries" $
       assertEqual [] [(aIdx,"A"), (bIdx,"B")] (IdSet.entries xs3)
   , testCase "keys" $

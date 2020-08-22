@@ -31,6 +31,7 @@ module Data.IdSet
     -- * Update
   , insert
   , insertAll
+  , filter
     -- * Traversal
   , map
     -- * Conversion
@@ -42,7 +43,8 @@ module Data.IdSet
   ) where
 
 -- Stdlib imports
-import           Prelude hiding ( null, lookup, map )
+import           Prelude hiding ( null, lookup, map, filter )
+import qualified Data.List as List
 -- External library imports
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy ( IntMap )
@@ -123,9 +125,23 @@ insertAll vs c = fromList' c vs
         (xsI, acc'') = fromList' acc' xs
     in (xI:xsI, acc'')
 
+-- | /O(n log n)/. Returns the subset of the 'IdSet', which contains only the
+-- elements that satisfy the predicate. As elements may be removed from the
+-- set, existing elements may be moved to lower indices. The mapping from the
+-- old indices to the new is returned as the first tuple element.
+filter :: Ord a => ( a -> Bool ) -> IdSet a -> (IntMap Identifier, IdSet a)
+filter f c =
+  let entries'  = List.filter (f . snd) $ entries c
+      (ids, c') = fromList (List.map snd entries')
+  in (IntMap.fromList $ zip (List.map fst entries') ids, c')
+
 
 -- # Traversal
 
+-- | /O(n log n)/. Applies the function to each element in the set. As elements
+-- may be removed from the set, existing elements may be moved to lower
+-- indices. The mapping from the old indices to the new is returned as the first
+-- tuple element.
 map :: Ord b => ( a -> b ) -> IdSet a -> (IntMap Identifier, IdSet b)
 map f s =
   let (newIds, s') = fromList $ fmap f $ IdList.elems (iData s)
