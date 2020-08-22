@@ -147,9 +147,7 @@ entries = IdList.entries . iData
 -- contains every elements in the provided list. A mapping from each element to
 -- its assigned identifier is also returned.
 fromList :: Ord a => [a] -> ([Identifier], IdSet a)
-fromList xs =
-  let s = foldr (\v -> snd . insert v) empty xs
-  in undefined -- (iInvMap s, s)
+fromList xs = insertAll xs empty
 
 -- | /O(1)/. Converts the 'IdSet' to an 'IntMap'.
 toIntMap :: IdSet a -> IntMap a

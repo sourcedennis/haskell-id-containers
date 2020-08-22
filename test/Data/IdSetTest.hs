@@ -71,6 +71,10 @@ unitTests =
       assertEqual [] [aIdx,bIdx] (IdSet.keys xs3)
   , testCase "elems" $
       assertEqual [] ["A","B"] (IdSet.elems xs3)
+  , testCase "fromList keys" $
+      assertEqual [] [0,1,2] (fst $ IdSet.fromList ["A","B","C"])
+  , testCase "fromList values" $
+      assertEqual [] [(0,"A"),(1,"B"),(2,"C")] (IdSet.entries $ snd $ IdSet.fromList ["A","B","C"])
   ]
 
 
