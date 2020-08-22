@@ -36,15 +36,18 @@ module Data.IdList
   , maybeUpdate
     -- * Traversal
   , map
+  , foldlWithKey'
     -- * Conversion
   , keys
   , elems
   , entries
+  , fromList
   , toIntMap
   ) where
 
 -- Stdlib imports
 import           Prelude hiding ( null, lookup, map )
+import qualified Data.List as List
 import           Data.Maybe ( fromMaybe )
 -- External library imports
 import qualified Data.IntMap.Lazy as IntMap
@@ -154,6 +157,10 @@ maybeUpdate f k c =
 map :: ( a -> b ) -> IdList a -> IdList b
 map f c = c { ilData = IntMap.map f (ilData c) }
 
+-- | /O(n)/. Left-associative fold with strict function application.
+foldlWithKey' :: (a -> (Identifier, b) -> a) -> a -> IdList b -> a
+foldlWithKey' f a = List.foldl' f a . entries
+
 
 -- # Conversion #
 
@@ -170,6 +177,12 @@ elems = IntMap.elems . ilData
 -- key.
 entries :: IdList a -> [(Identifier, a)]
 entries = IntMap.toList . ilData
+
+-- | /O(n log n)/. Converts the list to an 'IdList'. The returned 'IdList'
+-- contains every elements in the provided list. A mapping from each element to
+-- its assigned identifier is also returned.
+fromList :: Ord a => [a] -> ([Identifier], IdList a)
+fromList xs = appendAll xs empty
 
 -- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
 toIntMap :: IdList a -> IntMap a

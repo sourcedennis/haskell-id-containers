@@ -3,6 +3,9 @@ module Data.IdListTest
   ( tests
   ) where
 
+-- Stdlib imports
+import qualified Data.Sequence as Seq
+import           Data.Sequence ( Seq, (|>) )
 -- External library imports
 import           Test.Tasty ( TestTree, testGroup )
 import           Test.Tasty.HUnit ( assertEqual, assertBool, testCase )
@@ -63,12 +66,20 @@ unitTests =
       assertEqual [] Nothing (IdList.lookup bIdx xs1)
   , testCase "no lookup 2" $
       assertEqual [] Nothing (IdList.lookup a2Idx xs2)
+  , testCase "foldlWithKey' keys" $
+      assertEqual [] (Seq.fromList [0,1,2,3,4,5]) (IdList.foldlWithKey' (\a (i,_) -> a |> i) Seq.empty (snd $ IdList.fromList ["A","B","C","D","E","F"]))
+  , testCase "foldlWithKey' values" $
+      assertEqual [] (Seq.fromList ["A","B","C","D","E","F"]) (IdList.foldlWithKey' (\a (_,x) -> a |> x) Seq.empty (snd $ IdList.fromList ["A","B","C","D","E","F"]))
   , testCase "entries" $
       assertEqual [] [(aIdx,"A"), (bIdx,"B"), (a2Idx,"A")] (IdList.entries xs3)
   , testCase "keys" $
       assertEqual [] [aIdx,bIdx,a2Idx] (IdList.keys xs3)
   , testCase "elems" $
       assertEqual [] ["A","B","A"] (IdList.elems xs3)
+  , testCase "fromList keys" $
+      assertEqual [] [0,1,2] (fst $ IdList.fromList ["A","B","C"])
+  , testCase "fromList values" $
+      assertEqual [] [(0,"A"),(1,"B"),(2,"C")] (IdList.entries $ snd $ IdList.fromList ["A","B","C"])
   ]
 
 
