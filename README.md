@@ -2,6 +2,8 @@
 
 A collection of data containers where every element has a persistent identifier. These merely provide an convient interface (for some specific use cases) for some data structures from Haskell's `containers` and `unordered-containers` packages.
 
+Note that this package is in active development and does __not at all adhere to the Haskell Package Versioning Policy__.
+
 ## Example
 The order of arguments is specifically suitable for use with Haskell's `State` monad. For example, consider the fragment below which builds the following (cyclic) graph:
 
