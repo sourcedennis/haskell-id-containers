@@ -36,6 +36,7 @@ module Data.IdList
   , maybeUpdate
     -- * Traversal
   , map
+  , mapWithKey
   , foldlWithKey'
     -- * Conversion
   , keys
@@ -156,6 +157,10 @@ maybeUpdate f k c =
 -- | /O(n)/. Maps a function over all elements in the list.
 map :: ( a -> b ) -> IdList a -> IdList b
 map f c = c { ilData = IntMap.map f (ilData c) }
+
+-- | /O(n)/. Maps a functions over all elements in the list.
+mapWithKey :: ( Identifier -> a -> b ) -> IdList a -> IdList b
+mapWithKey f c = c { ilData = IntMap.mapWithKey f (ilData c) }
 
 -- | /O(n)/. Left-associative fold with strict function application.
 foldlWithKey' :: (a -> (Identifier, b) -> a) -> a -> IdList b -> a
