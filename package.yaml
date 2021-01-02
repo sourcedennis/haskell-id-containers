@@ -4,10 +4,11 @@ github:              "sourcedennis/haskell-id-containers"
 license:             BSD3
 author:              "Dennis Sprokholt"
 maintainer:          "me@dennis.life"
-copyright:           "2020 Dennis Sprokholt"
+copyright:           "2021 Dennis Sprokholt"
 
 extra-source-files:
 - README.md
+- resources/abc_graph.png
 - LICENSE
 
 description:         Please see the README on GitHub at <https://github.com/sourcedennis/haskell-id-containers#readme>

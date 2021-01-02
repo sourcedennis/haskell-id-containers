@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 115e4510e6ad94517589b4d5d416065f2f429bf9b16619000219acb95f1eb13e
+-- hash: 9aced48be200c0cd5c4e2bab059b703ad7c2c5750228491ad35300897455b863
 
 name:           id-containers
 version:        0.0.1
@@ -13,12 +13,13 @@ homepage:       https://github.com/sourcedennis/haskell-id-containers#readme
 bug-reports:    https://github.com/sourcedennis/haskell-id-containers/issues
 author:         Dennis Sprokholt
 maintainer:     me@dennis.life
-copyright:      2020 Dennis Sprokholt
+copyright:      2021 Dennis Sprokholt
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
+    resources/abc_graph.png
     LICENSE
 
 source-repository head
