@@ -28,6 +28,7 @@ module Data.IdSet
   , null
   , size
   , lookup
+  , lookupKey
     -- * Update
   , insert
   , insertAll
@@ -96,6 +97,11 @@ size = IdList.size . iData
 -- it does not exist.
 lookup :: Identifier -> IdSet a -> Maybe a
 lookup k = IdList.lookup k . iData
+
+-- | /O(log n)/. Returns the key of the element if it is present in the set;
+  -- otherwise `Nothing` is returned.
+lookupKey :: Ord a => a -> IdSet a -> Maybe Identifier
+lookupKey v s = v `Map.lookup` iInvMap s
 
 
 -- # Update #

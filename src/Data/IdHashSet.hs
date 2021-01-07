@@ -33,9 +33,12 @@ module Data.IdHashSet
   , null
   , size
   , lookup
+  , lookupKey
     -- * Update
   , insert
   , insertAll
+    -- * Traversal
+  , map
     -- * Conversion
   , keys
   , elems
@@ -46,6 +49,7 @@ module Data.IdHashSet
 
 -- Stdlib imports
 import           Prelude hiding ( null, lookup, map )
+import qualified Data.List as List
 -- External library imports
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy ( IntMap )
@@ -99,6 +103,11 @@ size = IdList.size . iData
 lookup :: Identifier -> IdHashSet a -> Maybe a
 lookup k = IdList.lookup k . iData
 
+-- | /O(log n)/. Returns the key of the element if it is present in the set;
+  -- otherwise `Nothing` is returned.
+lookupKey :: (Eq a, Hashable a) => a -> IdHashSet a -> Maybe Identifier
+lookupKey v s = v `HashMap.lookup` iInvMap s
+
 
 -- # Update #
 
@@ -127,6 +136,30 @@ insertAll vs c = fromList' c vs
         (xsI, acc'') = fromList' acc' xs
     in (xI:xsI, acc'')
 
+-- | /O(n log n)/. Returns the subset of the 'IdHashSet', which contains only
+-- the elements that satisfy the predicate. As elements may be removed from the
+-- set, existing elements may be moved to lower indices. The mapping from the
+-- old indices to the new is returned as the first tuple element.
+filter :: (Eq a, Hashable a) => ( a -> Bool ) -> IdHashSet a -> (IntMap Identifier, IdHashSet a)
+filter f c =
+  let entries'  = List.filter (f . snd) $ entries c
+      (ids, c') = fromList (List.map snd entries')
+  in (IntMap.fromList $ zip (List.map fst entries') ids, c')
+
+
+-- # Traversal
+
+-- | /O(n log n)/. Applies the function to each element in the set. As elements
+-- may be removed from the set, existing elements may be moved to lower
+-- indices. The mapping from the old indices to the new is returned as the first
+-- tuple element.
+map :: (Eq b, Hashable b) => ( a -> b ) -> IdHashSet a -> (IntMap Identifier, IdHashSet b)
+map f s =
+  let (newIds, s') = fromList $ fmap f $ IdList.elems (iData s)
+      mapping = IntMap.fromList $ zip [0..] newIds
+  in (mapping, s')
+
+
 -- # Conversion #
 
 -- | /O(n)/. Lazily produces all identifiers from the list in ascending order.
@@ -145,10 +178,8 @@ entries = IdList.entries . iData
 -- | /O(n log n)/. Converts the list to an 'IdHashSet'. The returned 'IdHashSet'
 -- contains every elements in the provided list. A mapping from each element to
 -- its assigned identifier is also returned.
-fromList :: (Eq a, Hashable a) => [a] -> (HashMap a Identifier, IdHashSet a)
-fromList xs =
-  let s = foldr (\v -> snd . insert v) empty xs
-  in (iInvMap s, s)
+fromList :: (Eq a, Hashable a) => [a] -> ([Identifier], IdHashSet a)
+fromList xs = insertAll xs empty
 
 -- | /O(1)/. Converts the 'IdHashSet' to an 'IntMap'.
 toIntMap :: IdHashSet a -> IntMap a

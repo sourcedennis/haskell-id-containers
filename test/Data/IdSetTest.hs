@@ -67,6 +67,10 @@ unitTests =
       assertEqual [] Nothing (IdSet.lookup aIdx (IdSet.empty :: IdSet String))
   , testCase "no lookup 1" $
       assertEqual [] Nothing (IdSet.lookup bIdx xs1)
+  , testCase "lookup key" $
+      assertEqual [] (Just bIdx) (IdSet.lookupKey "B" xs3)
+  , testCase "no lookup key" $
+      assertEqual [] Nothing (IdSet.lookupKey "C" xs3)
   , testCase "map values" $
       assertEqual [] [8,3,2] (IdSet.elems $ snd $ IdSet.map (`div` 2) $ snd $ IdSet.fromList [16,6,4,17,7])
   , testCase "map keys" $ -- map (`div` 2) [16,6,4,17,7] = [8,3,2]

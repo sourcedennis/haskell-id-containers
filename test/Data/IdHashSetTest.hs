@@ -66,6 +66,10 @@ unitTests =
       assertEqual [] Nothing (IdHashSet.lookup aIdx (IdHashSet.empty :: IdHashSet String))
   , testCase "no lookup 1" $
       assertEqual [] Nothing (IdHashSet.lookup bIdx xs1)
+  , testCase "lookup key" $
+      assertEqual [] (Just bIdx) (IdHashSet.lookupKey "B" xs3)
+  , testCase "no lookup key" $
+      assertEqual [] Nothing (IdHashSet.lookupKey "C" xs3)
   , testCase "entries" $
       assertEqual [] [(aIdx,"A"), (bIdx,"B")] (IdHashSet.entries xs3)
   , testCase "keys" $
