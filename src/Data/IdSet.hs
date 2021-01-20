@@ -51,6 +51,7 @@ import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy ( IntMap )
 import qualified Data.Map.Strict as Map
 import           Data.Map.Strict ( Map )
+import           Control.DeepSeq ( NFData ( rnf ) )
 -- Local imports
 import qualified Data.IdList as IdList
 import           Data.IdList ( IdList )
@@ -179,3 +180,9 @@ fromList xs = insertAll xs empty
 -- | /O(1)/. Converts the 'IdSet' to an 'IntMap'.
 toIntMap :: IdSet a -> IntMap a
 toIntMap = IdList.toIntMap . iData
+
+
+-- # Instances #
+
+instance NFData a => NFData (IdSet a) where
+  rnf s = rnf (iData s) `seq` rnf (iInvMap s)

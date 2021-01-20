@@ -53,6 +53,7 @@ import           Data.Maybe ( fromMaybe )
 -- External library imports
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy ( IntMap )
+import           Control.DeepSeq ( NFData ( rnf ) )
 
 
 -- # Types #
@@ -205,3 +206,6 @@ instance Traversable IdList where
 
 instance Show a => Show (IdList a) where
   show = show . IntMap.toList . ilData
+
+instance NFData a => NFData (IdList a) where
+  rnf s = rnf (ilData s) `seq` rnf (ilSize s)
