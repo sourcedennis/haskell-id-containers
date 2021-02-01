@@ -52,8 +52,8 @@ import           Prelude hiding ( null, lookup, map )
 import qualified Data.List as List
 import           Data.Maybe ( fromMaybe )
 -- External library imports
-import qualified Data.IntMap.Lazy as IntMap
-import           Data.IntMap.Lazy ( IntMap )
+import qualified Data.IntMap.Strict as IntMap
+import           Data.IntMap.Strict ( IntMap )
 import           Control.DeepSeq ( NFData ( rnf ) )
 
 
@@ -65,8 +65,8 @@ type Identifier = Int
 -- | A list of values with identifiers
 data IdList a =
   IdList {
-    ilData  :: IntMap a
-  , ilSize  :: Int
+    ilData  :: !(IntMap a)
+  , ilSize  :: !Int
   }
 
 
@@ -75,11 +75,13 @@ data IdList a =
 -- | /O(1)/. The empty 'IdList'.
 empty :: IdList a
 empty = IdList IntMap.empty 0
+{-# INLINE empty #-}
 
 -- | /O(1)/. An 'IdList' with a single element. Also returns the identifier of
 -- that element.
 singleton :: a -> (Identifier, IdList a)
 singleton v = (0, IdList (IntMap.singleton 0 v) 1)
+{-# INLINE singleton #-}
 
 
 -- # Query #
@@ -87,15 +89,18 @@ singleton v = (0, IdList (IntMap.singleton 0 v) 1)
 -- | /O(1)/. Returns `True` iff the list is empty.
 null :: IdList a -> Bool
 null c = ilSize c == 0
+{-# INLINE null #-}
 
 -- | /O(1)/. The size of the list.
 size :: IdList a -> Int
 size = ilSize
+{-# INLINE size #-}
 
 -- | /O(log n)/. Finds the entry for the given identifier. Returns `Nothing` if
 -- it does not exist.
 lookup :: Identifier -> IdList a -> Maybe a
 lookup k = IntMap.lookup k . ilData
+{-# INLINE lookup #-}
 
 
 -- # Update #
@@ -111,6 +116,7 @@ append v c =
            , ilSize = k + 1
            }
   )
+{-# INLINE append #-}
 
 -- | /O(m log n)/. Adds the entries to the end of the list in order. The
 -- identifiers of the entries are also returned.
@@ -124,6 +130,7 @@ appendAll vs c = fromList' c vs
     let (xI, acc')   = append x acc
         (xsI, acc'') = fromList' acc' xs
     in (xI:xsI, acc'')
+{-# INLINE appendAll #-}
 
 -- | /O(log n)/. Replaces the value for the given identifier in the list. If the
 -- identifier is not present in the list, the original list is returned.
@@ -131,11 +138,13 @@ appendAll vs c = fromList' c vs
 -- When knowledge of success is desired, use `maybeReplace`.
 replace :: Identifier -> a -> IdList a -> IdList a
 replace k v = update (const v) k
+{-# INLINE replace #-}
 
 -- | /O(log n)/. Replaces the value for the given identifier in the list. If the
 -- identifier is not present in the list, `Nothing` is returned.
 maybeReplace :: Identifier -> a -> IdList a -> Maybe (IdList a)
 maybeReplace k v = maybeUpdate (const v) k
+{-# INLINE maybeReplace #-}
 
 -- | /O(log n)/. Updates the element for the identifier. If the identifier is
 -- not present in the map, the original list is returned.
@@ -145,6 +154,7 @@ update :: ( a -> a ) -> Identifier -> IdList a -> IdList a
 update f k c =
   let ilData' = IntMap.update (Just . f) k (ilData c)
   in c { ilData = ilData' }
+{-# INLINE update #-}
 
 -- | /O(log n)/. Updates the element for the identifier. If the identifier is
 -- not present in the map, `Nothing` is returned.
@@ -152,6 +162,7 @@ maybeUpdate :: ( a -> a ) -> Identifier -> IdList a -> Maybe (IdList a)
 maybeUpdate f k c =
   let (oldV, ilData') = IntMap.updateLookupWithKey (\_ -> Just . f) k (ilData c)
   in oldV >> return ( c { ilData = ilData' } )
+{-# INLINE maybeUpdate #-}
 
 
 -- # Traversal #
@@ -159,14 +170,20 @@ maybeUpdate f k c =
 -- | /O(n)/. Maps a function over all elements in the list.
 map :: ( a -> b ) -> IdList a -> IdList b
 map f c = c { ilData = IntMap.map f (ilData c) }
+{-# NOINLINE [1] map #-}
+{-# RULES
+"map/map" forall f g xs . map f (map g xs) = map (f . g) xs
+  #-}
 
 -- | /O(n)/. Maps a functions over all elements in the list.
 mapWithKey :: ( Identifier -> a -> b ) -> IdList a -> IdList b
 mapWithKey f c = c { ilData = IntMap.mapWithKey f (ilData c) }
+{-# INLINE mapWithKey #-}
 
 -- | /O(n)/. Left-associative fold with strict function application.
 foldlWithKey' :: (a -> (Identifier, b) -> a) -> a -> IdList b -> a
 foldlWithKey' f a = List.foldl' f a . entries
+{-# INLINE foldlWithKey' #-}
 
 
 -- # Conversion #
@@ -174,30 +191,36 @@ foldlWithKey' f a = List.foldl' f a . entries
 -- | /O(n)/. Lazily produces all identifiers from the list in ascending order.
 keys :: IdList a -> [Identifier]
 keys c = [0..ilSize c - 1]
+{-# INLINE keys #-}
 
 -- | /O(n)/. Converts the elements in the 'IdList' to a list in order of
 -- insertion.
 elems :: IdList a -> [a]
 elems = IntMap.elems . ilData
+{-# INLINE elems #-}
 
 -- | /O(n)/. Converts the elements in the 'IdList' to a list, each with their
 -- key.
 entries :: IdList a -> [(Identifier, a)]
 entries = IntMap.toList . ilData
+{-# INLINE entries #-}
 
 -- | /O(n)/. Converts the elements in the 'IdList' to a list in order of
 -- insertion.
 toList :: IdList a -> [a]
 toList = elems
+{-# INLINE toList #-}
 
 -- | /O(n log n)/. Converts the list to an 'IdList'. The returned 'IdList'
 -- contains every elements in the provided list.
 fromList :: [a] -> IdList a
 fromList xs = snd $ appendAll xs empty
+{-# INLINE fromList #-}
 
 -- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
 toIntMap :: IdList a -> IntMap a
 toIntMap = ilData
+{-# INLINE toIntMap #-}
 
 
 instance Functor IdList where
