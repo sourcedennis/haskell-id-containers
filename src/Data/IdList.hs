@@ -42,6 +42,7 @@ module Data.IdList
   , keys
   , elems
   , entries
+  , toList
   , fromList
   , toIntMap
   ) where
@@ -184,11 +185,15 @@ elems = IntMap.elems . ilData
 entries :: IdList a -> [(Identifier, a)]
 entries = IntMap.toList . ilData
 
+-- | /O(n)/. Converts the elements in the 'IdList' to a list in order of
+-- insertion.
+toList :: IdList a -> [a]
+toList = elems
+
 -- | /O(n log n)/. Converts the list to an 'IdList'. The returned 'IdList'
--- contains every elements in the provided list. A mapping from each element to
--- its assigned identifier is also returned.
-fromList :: Ord a => [a] -> ([Identifier], IdList a)
-fromList xs = appendAll xs empty
+-- contains every elements in the provided list.
+fromList :: [a] -> IdList a
+fromList xs = snd $ appendAll xs empty
 
 -- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
 toIntMap :: IdList a -> IntMap a
@@ -206,6 +211,9 @@ instance Traversable IdList where
 
 instance Show a => Show (IdList a) where
   show = show . IntMap.toList . ilData
+
+instance Eq a => Eq (IdList a) where
+  (==) a b = ilData a == ilData b
 
 instance NFData a => NFData (IdList a) where
   rnf s = rnf (ilData s) `seq` rnf (ilSize s)
