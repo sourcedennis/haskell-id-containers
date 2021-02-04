@@ -211,10 +211,10 @@ toList :: IdList a -> [a]
 toList = elems
 {-# INLINE toList #-}
 
--- | /O(n log n)/. Converts the list to an 'IdList'. The returned 'IdList'
--- contains every elements in the provided list.
+-- | /O(n)/. Converts the list to an 'IdList'. The returned 'IdList' contains
+-- every element in the provided list.
 fromList :: [a] -> IdList a
-fromList xs = snd $ appendAll xs empty
+fromList xs = IdList (IntMap.fromAscList $ zip [0..] xs) (length xs)
 {-# INLINE fromList #-}
 
 -- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
