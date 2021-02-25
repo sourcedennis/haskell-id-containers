@@ -34,10 +34,19 @@ module Data.IdList
   , maybeReplace
   , update
   , maybeUpdate
+  , (++)
+  , concat
+  , concatMap
     -- * Traversal
   , map
   , mapWithKey
   , foldlWithKey'
+  , zip
+  , zipExact
+  , zipWith
+  , zipWithM
+  , zipWithExact
+  , zipWithExactM
     -- * Conversion
   , keys
   , elems
@@ -45,15 +54,22 @@ module Data.IdList
   , toList
   , fromList
   , toIntMap
+  , toVector
   ) where
 
 -- Stdlib imports
-import           Prelude hiding ( null, lookup, map )
+import           Prelude
+  hiding ( null, lookup, map, zipWith, zip, (++), concat, concatMap )
 import qualified Data.List as List
 import           Data.Maybe ( fromMaybe )
+import           Data.Hashable ( Hashable (..) )
+import qualified Control.Monad as Monad
+import           Control.Monad.Fail ( MonadFail )
 -- External library imports
-import qualified Data.IntMap.Strict as IntMap
-import           Data.IntMap.Strict ( IntMap )
+import qualified Data.IntMap as IntMap
+import           Data.IntMap ( IntMap )
+import qualified Data.Vector as Vector
+import           Data.Vector ( Vector )
 import           Control.DeepSeq ( NFData ( rnf ) )
 
 
@@ -143,7 +159,7 @@ replace k v = update (const v) k
 -- | /O(log n)/. Replaces the value for the given identifier in the list. If the
 -- identifier is not present in the list, `Nothing` is returned.
 maybeReplace :: Identifier -> a -> IdList a -> Maybe (IdList a)
-maybeReplace k v = maybeUpdate (const v) k
+maybeReplace k v = maybeUpdate (const $ Just v) k
 {-# INLINE maybeReplace #-}
 
 -- | /O(log n)/. Updates the element for the identifier. If the identifier is
@@ -158,11 +174,30 @@ update f k c =
 
 -- | /O(log n)/. Updates the element for the identifier. If the identifier is
 -- not present in the map, `Nothing` is returned.
-maybeUpdate :: ( a -> a ) -> Identifier -> IdList a -> Maybe (IdList a)
+maybeUpdate :: ( a -> Maybe a ) -> Identifier -> IdList a -> Maybe (IdList a)
 maybeUpdate f k c =
-  let (oldV, ilData') = IntMap.updateLookupWithKey (\_ -> Just . f) k (ilData c)
-  in oldV >> return ( c { ilData = ilData' } )
+  do
+    let d = ilData c
+    v <- f =<< IntMap.lookup k d
+    return $ c { ilData = IntMap.insert k v d }
 {-# INLINE maybeUpdate #-}
+
+-- | /O(n)/. Appends the lists
+--
+-- >>> append (fromList [4,5,7]) (fromList [9,2])
+(++) :: IdList a -> IdList a -> IdList a
+(++) xs ys = fromList (toList xs List.++ toList ys)
+{-# INLINE (++) #-}
+
+-- | /O(n)/. Concatenates the lists
+--
+-- >>> concat [fromList [4,5,7], fromList [9,2]]
+concat :: [IdList a] -> IdList a
+concat = fromList . List.concatMap toList
+{-# INLINE concat #-}
+
+concatMap :: ( a -> IdList b ) -> IdList a -> IdList b
+concatMap f = fromList . List.concatMap (toList . f) . toList
 
 
 -- # Traversal #
@@ -184,6 +219,56 @@ mapWithKey f c = c { ilData = IntMap.mapWithKey f (ilData c) }
 foldlWithKey' :: (a -> (Identifier, b) -> a) -> a -> IdList b -> a
 foldlWithKey' f a = List.foldl' f a . entries
 {-# INLINE foldlWithKey' #-}
+
+-- | /O(\min(m,n))/. Pairs the elements in two `IdList`s. If one input `IdList`
+-- is shorter, excess elements are discarded.
+zip :: IdList a -> IdList b -> IdList (a, b)
+zip xs ys = fromList $ List.zip (toList xs) (toList ys)
+{-# INLINE zip #-}
+
+-- | /O(n)/. Pairs the elements in two `IdList`s of /equal length/. If the
+-- `IdList`s are of unequal length, it fails over the `MonadFail`.
+zipExact :: MonadFail m => IdList a -> IdList b -> m (IdList (a, b))
+zipExact xs ys =
+  if size xs == size ys then
+    return $ zip xs ys
+  else
+    fail "Unequal lengths"
+{-# INLINE zipExact #-}
+
+-- | /O(\min(m,n))/. Applies the function to element pairs of the `IdList`s. If
+-- one input `IdList` is shorter, excess elements are discarded.
+zipWith :: ( a -> b -> c ) -> IdList a -> IdList b -> IdList c
+zipWith f xs ys = fromList $ List.zipWith f (toList xs) (toList ys)
+{-# INLINE zipWith #-}
+
+-- | /O(\min(m,n))/. Applies the applicative function to element pairs of the
+-- `IdList`s. If one input `IdList` is shorter, excess elements are discarded.
+zipWithM :: Applicative m => ( a -> b -> m c ) -> IdList a -> IdList b -> m (IdList c)
+zipWithM f xs ys = fromList <$> Monad.zipWithM f (toList xs) (toList ys)
+{-# INLINE zipWithM #-}
+
+-- | /O(n)/. Applies the function to element pairs of two `IdList`s of /equal
+-- length/. If the `IdList`s are of unequal length, it fails over the
+-- `MonadFail`.
+zipWithExact :: MonadFail m => ( a -> b -> c ) -> IdList a -> IdList b -> m (IdList c)
+zipWithExact f xs ys =
+  if size xs == size ys then
+    return $ zipWith f xs ys
+  else
+    fail "Unequal lengths"
+{-# INLINE zipWithExact #-}
+
+-- | /O(n)/. Applies the monadic function to element pairs of two `IdList`s of
+-- /equal length/. If the `IdList`s are of unequal length, it fails over the
+-- `MonadFail`.
+zipWithExactM :: MonadFail m => ( a -> b -> m c ) -> IdList a -> IdList b -> m (IdList c)
+zipWithExactM f xs ys =
+  if size xs == size ys then
+    zipWithM f xs ys
+  else
+    fail "Unequal lengths"
+{-# INLINE zipWithExactM #-}
 
 
 -- # Conversion #
@@ -214,13 +299,18 @@ toList = elems
 -- | /O(n)/. Converts the list to an 'IdList'. The returned 'IdList' contains
 -- every element in the provided list.
 fromList :: [a] -> IdList a
-fromList xs = IdList (IntMap.fromAscList $ zip [0..] xs) (length xs)
+fromList xs = IdList (IntMap.fromAscList $ List.zip [0..] xs) (length xs)
 {-# INLINE fromList #-}
 
 -- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
 toIntMap :: IdList a -> IntMap a
 toIntMap = ilData
 {-# INLINE toIntMap #-}
+
+-- | /O(1)/. Converts the 'IdList' to an 'IntMap'.
+toVector :: IdList a -> Vector a
+toVector = Vector.fromList . toList
+{-# INLINE toVector #-}
 
 
 instance Functor IdList where
@@ -240,3 +330,6 @@ instance Eq a => Eq (IdList a) where
 
 instance NFData a => NFData (IdList a) where
   rnf s = rnf (ilData s) `seq` rnf (ilSize s)
+
+instance Hashable a => Hashable (IdList a) where
+  hashWithSalt i = hashWithSalt i . toList

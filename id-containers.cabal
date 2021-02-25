@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 641949c538b1e40fe3da342b06dc8c0979bb0cf1d17bae14c25e3b68d5abd203
+-- hash: c813dbdbae05649d70238aaa97ffee7ee7e5a868e40400ab7f02bd1d63af2f65
 
 name:           id-containers
 version:        0.0.1
@@ -39,8 +39,9 @@ library
       base >=4.7 && <5
     , containers >=0.6 && <0.7
     , deepseq >=1.2 && <1.5
-    , hashable >=1.3 && <1.4
+    , hashable >=1.2 && <1.4
     , unordered-containers >=0.2.10 && <0.2.11
+    , vector >=0.12 && <0.13
   default-language: Haskell2010
 
 test-suite id-containers-test
@@ -57,7 +58,7 @@ test-suite id-containers-test
   build-depends:
       base >=4.7 && <5
     , containers >=0.6 && <0.7
-    , hashable >=1.3 && <1.4
+    , hashable >=1.2 && <1.4
     , id-containers
     , tasty >=1.2.2 && <1.4
     , tasty-hunit >=0.10 && <0.11

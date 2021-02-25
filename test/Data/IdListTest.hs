@@ -70,6 +70,18 @@ unitTests =
       assertEqual [] (Seq.fromList [0,1,2,3,4,5]) (IdList.foldlWithKey' (\a (i,_) -> a |> i) Seq.empty (IdList.fromList ["A","B","C","D","E","F"]))
   , testCase "foldlWithKey' values" $
       assertEqual [] (Seq.fromList ["A","B","C","D","E","F"]) (IdList.foldlWithKey' (\a (_,x) -> a |> x) Seq.empty (IdList.fromList ["A","B","C","D","E","F"]))
+  , testCase "zip (long left)" $
+      assertEqual [] (IdList.fromList [(3,True),(7,False),(4,True)]) (IdList.zip (IdList.fromList [3,7,4,1]) (IdList.fromList [True,False,True]))
+  , testCase "zip (long right)" $
+      assertEqual [] (IdList.fromList [(3,True),(7,False)]) (IdList.zip (IdList.fromList [3,7]) (IdList.fromList [True,False,True]))
+  , testCase "zipWith (long left)" $
+      assertEqual [] (IdList.fromList [3,6,9]) (IdList.zipWith (+) (IdList.fromList [1,2,3,4]) (IdList.fromList [2,4,6]))
+  , testCase "zipWith (long right)" $
+      assertEqual [] (IdList.fromList [3,6]) (IdList.zipWith (+) (IdList.fromList [1,2]) (IdList.fromList [2,4,6]))
+  , testCase "zipExact (uneq lengths)" $
+      assertEqual [] Nothing (IdList.zipExact (IdList.fromList [3,7,4,1]) (IdList.fromList [2,6,1]))
+  , testCase "zipExact (eq lengths)" $
+      assertEqual [] (Just $ IdList.fromList [(3,2),(7,6),(4,1)]) (IdList.zipExact (IdList.fromList [3,7,4]) (IdList.fromList [2,6,1]))
   , testCase "entries" $
       assertEqual [] [(aIdx,"A"), (bIdx,"B"), (a2Idx,"A")] (IdList.entries xs3)
   , testCase "keys" $
